@@ -17,7 +17,7 @@ use std::{
 ///
 /// When is droped automatically will call [`egui::Context::end_frame`] function and update the [`Painter`]
 pub struct GuiContext {
-	context: egui::Context,
+	pub context: egui::Context,
 	painter: Arc<Mutex<Painter>>,
 }
 
