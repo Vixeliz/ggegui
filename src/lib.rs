@@ -106,7 +106,7 @@ impl Gui {
 			.lock()
 			.unwrap()
 			.update(ctx, self.input.scale_factor);
-		// self.input.set_scale_factor(1.0, ctx.gfx.size());
+		self.input.set_scale_factor(1.0, ctx.gfx.size());
 	}
 
 	/// Return an [`EguiContext`] for update the gui
