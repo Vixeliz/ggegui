@@ -97,23 +97,61 @@ impl Painter {
 	) {
 		// set textures
 		for (id, delta) in &textures_delta.set {
-			if delta.pos.is_some() {
-				eprintln!("Error: Non-zero offset texture updates are not implemented yet");
-				continue;
-			}
-			let image = match &delta.image {
-				egui::ImageData::Color(image) => color_to_image(image, ctx),
-				egui::ImageData::Font(image) => font_to_image(image, ctx),
+			let image = if let Some(pos) = delta.pos {
+				println!("Partial update");
+				let texture = self.textures.get(id).unwrap();
+				let partial_image = match &delta.image {
+					egui::ImageData::Color(image) => color_to_image(image, ctx),
+					egui::ImageData::Font(image) => font_to_image(image, ctx),
+				};
+
+				update_image_rect(texture, pos, &partial_image, ctx)
+			} else {
+				match &delta.image {
+					egui::ImageData::Color(image) => color_to_image(image, ctx),
+					egui::ImageData::Font(image) => font_to_image(image, ctx),
+				}
 			};
 
 			self.textures.insert(*id, image);
 		}
-
 		// free textures
 		for id in &textures_delta.free {
 			self.textures.remove(id);
 		}
 	}
+}
+
+fn update_image_rect(
+	dest: &graphics::Image,
+	[x, y]: [usize; 2],
+	src: &graphics::Image,
+	ctx: &mut ggez::Context,
+) -> graphics::Image {
+	let mut dest_pixels = dest.to_pixels(ctx).unwrap();
+	let src_pixels = src.to_pixels(ctx).unwrap();
+	let y = y * 4;
+	let x = x * 4;
+	for sy in 0..src.height() as usize {
+		for sx in 0..src.width() as usize {
+			let sy = sy * 4;
+			let sx = sx * 4;
+			let idx = ((y + sy) * dest.width() as usize) + (x + sx); // Indexes
+			let idx_two = ((sy) * src.width() as usize) + (sx); // Indexes
+													// println!("IDX_ONE: {idx}, IDX_TWO: {idx_two}");
+			dest_pixels[idx] = src_pixels[idx_two];
+			dest_pixels[idx + 1] = src_pixels[idx_two + 1];
+			dest_pixels[idx + 2] = src_pixels[idx_two + 2];
+			dest_pixels[idx + 3] = src_pixels[idx_two + 3];
+		}
+	}
+	graphics::Image::from_pixels(
+		ctx,
+		dest_pixels.as_slice(),
+		graphics::ImageFormat::Rgba8UnormSrgb,
+		dest.width() as u32,
+		dest.height() as u32,
+	)
 }
 
 // Generate Image from egui ColorImage

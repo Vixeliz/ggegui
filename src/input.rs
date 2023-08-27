@@ -40,16 +40,18 @@ impl Input {
 	/// use the function [text_input_event](Input:: text_input_event)
 	pub fn update(&mut self, ctx: &ggez::Context) {
 		/*======================= Keyboard =======================*/
-		for key in ctx.keyboard.pressed_keys() {
-			if let Some(key) = translate_keycode(*key) {
-				self.raw.events.push(egui::Event::Key {
-					key,
-					pressed: true,
-					repeat: false,
-					modifiers: translate_modifier(ctx.keyboard.active_mods()),
-				})
-			}
-		}
+		// for key in ctx.keyboard.pressed_keys() {
+		// 	if ctx.keyboard.is_key_just_pressed(*key) {
+		// 		if let Some(key) = translate_keycode(*key) {
+		// 			self.raw.events.push(egui::Event::Key {
+		// 				key,
+		// 				pressed: true,
+		// 				repeat: false,
+		// 				modifiers: translate_modifier(ctx.keyboard.active_mods()),
+		// 			})
+		// 		}
+		// 	}
+		// }
 
 		/*======================= Mouse =======================*/
 		let ggez::mint::Point2 { x, y } = ctx.mouse.position();
@@ -108,43 +110,84 @@ impl Input {
 	}
 
 	/// lets know what character is pressed on the keyboard
-	pub fn text_input_event(&mut self, ch: char) {
+	pub fn text_input_event(&mut self, ch: char, ctx: &mut ggez::Context) {
 		if is_printable(ch) {
 			self.raw.events.push(egui::Event::Text(ch.to_string()));
+		} else {
+			println!("{ch:?}");
+			// if ctx.keyboard.is_key_just_pressed(*key) {
+			if let Some(key) = translate_keycode(ch) {
+				self.raw.events.push(egui::Event::Key {
+					key,
+					pressed: true,
+					repeat: ctx.keyboard.is_key_repeated(),
+					modifiers: translate_modifier(ctx.keyboard.active_mods()),
+				})
+			}
+			// }
+			// }
 		}
 	}
 }
 
 #[inline]
-fn translate_keycode(key: KeyCode) -> Option<egui::Key> {
+fn translate_keycode(key: char) -> Option<egui::Key> {
 	Some(match key {
-		KeyCode::Escape => Key::Escape,
-		KeyCode::Insert => Key::Insert,
-		KeyCode::Home => Key::Home,
-		KeyCode::Delete => Key::Delete,
-		KeyCode::End => Key::End,
-		KeyCode::PageDown => Key::PageDown,
-		KeyCode::PageUp => Key::PageUp,
-		KeyCode::Left => Key::ArrowLeft,
-		KeyCode::Up => Key::ArrowUp,
-		KeyCode::Right => Key::ArrowRight,
-		KeyCode::Down => Key::ArrowDown,
-		KeyCode::Back => Key::Backspace,
-		KeyCode::Return => Key::Enter,
-		KeyCode::Tab => Key::Tab,
-		KeyCode::Space => Key::Space,
-
-		KeyCode::A => Key::A,
-		KeyCode::K => Key::K,
-		KeyCode::U => Key::U,
-		KeyCode::W => Key::W,
-		KeyCode::Z => Key::Z,
-
+		'\u{001b}' => Key::Escape,
+		// => Key::Insert,
+		// => Key::Home,
+		'\u{7f}' => Key::Delete,
+		// => Key::End,
+		// => Key::PageDown,
+		// => Key::PageUp,
+		// => Key::ArrowLeft,
+		// => Key::ArrowUp,
+		// => Key::ArrowRight,
+		// => Key::ArrowDown,
+		'\u{8}' => Key::Backspace,
+		'\r' => Key::Enter,
+		'\t' => Key::Tab,
+		' ' => Key::Space,
+		// KeyCode::A => Key::A,
+		// KeyCode::K => Key::K,
+		// KeyCode::U => Key::U,
+		// KeyCode::W => Key::W,
+		// KeyCode::Z => Key::Z,
 		_ => {
 			return None;
 		}
 	})
 }
+
+// #[inline]
+// fn translate_keycode(key: KeyCode) -> Option<egui::Key> {
+// 	Some(match key {
+// 		KeyCode::Escape => Key::Escape,
+// 		KeyCode::Insert => Key::Insert,
+// 		KeyCode::Home => Key::Home,
+// 		KeyCode::Delete => Key::Delete,
+// 		KeyCode::End => Key::End,
+// 		KeyCode::PageDown => Key::PageDown,
+// 		KeyCode::PageUp => Key::PageUp,
+// 		KeyCode::Left => Key::ArrowLeft,
+// 		KeyCode::Up => Key::ArrowUp,
+// 		KeyCode::Right => Key::ArrowRight,
+// 		KeyCode::Down => Key::ArrowDown,
+// 		KeyCode::Back => Key::Backspace,
+// 		KeyCode::Return => Key::Enter,
+// 		KeyCode::Tab => Key::Tab,
+// 		KeyCode::Space => Key::Space,
+
+// 		KeyCode::A => Key::A,
+// 		KeyCode::K => Key::K,
+// 		KeyCode::U => Key::U,
+// 		KeyCode::W => Key::W,
+// 		KeyCode::Z => Key::Z,
+// 		_ => {
+// 			return None;
+// 		}
+// 	})
+// }
 
 #[inline]
 fn translate_modifier(keymods: KeyMods) -> egui::Modifiers {
