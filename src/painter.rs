@@ -26,7 +26,7 @@ impl Painter {
 			},
 		});
 		for (id, mesh, clip) in self.paint_jobs.iter() {
-			canvas.set_scissor_rect(*clip).unwrap();
+			canvas.set_scissor_rect(*clip).ok();
 			canvas.draw_textured_mesh(
 				mesh.clone(),
 				self.textures[id].clone(),
