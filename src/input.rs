@@ -2,8 +2,8 @@ use std::time::Instant;
 
 use egui::{pos2, vec2, Key, PointerButton, Pos2, RawInput};
 use ggez::{
-	event::MouseButton,
-	input::keyboard::{KeyCode, KeyMods},
+	input::keyboard::KeyCode,
+	winit::{event::MouseButton, keyboard::ModifiersState},
 };
 
 /// Contains and manages everything related to the [`egui`] input
@@ -71,7 +71,7 @@ impl Input {
 					},
 					pos: self.pointer_pos,
 					pressed: true,
-					modifiers: translate_modifier(ctx.keyboard.active_mods()),
+					modifiers: translate_modifier(ctx.keyboard.active_modifiers),
 				});
 			} else if ctx.mouse.button_just_released(button) {
 				self.raw.events.push(egui::Event::PointerButton {
@@ -83,7 +83,7 @@ impl Input {
 					},
 					pos: self.pointer_pos,
 					pressed: false,
-					modifiers: translate_modifier(ctx.keyboard.active_mods()),
+					modifiers: translate_modifier(ctx.keyboard.active_modifiers),
 				});
 			}
 		}
@@ -121,7 +121,7 @@ impl Input {
 					key,
 					pressed: true,
 					repeat: ctx.keyboard.is_key_repeated(),
-					modifiers: translate_modifier(ctx.keyboard.active_mods()),
+					modifiers: translate_modifier(ctx.keyboard.active_modifiers),
 				})
 			}
 			// }
@@ -190,21 +190,21 @@ fn translate_keycode(key: char) -> Option<egui::Key> {
 // }
 
 #[inline]
-fn translate_modifier(keymods: KeyMods) -> egui::Modifiers {
+fn translate_modifier(keymods: ModifiersState) -> egui::Modifiers {
 	egui::Modifiers {
-		alt: keymods.intersects(KeyMods::ALT),
-		ctrl: keymods.intersects(KeyMods::CTRL),
-		shift: keymods.intersects(KeyMods::SHIFT),
+		alt: keymods.intersects(ModifiersState::ALT),
+		ctrl: keymods.intersects(ModifiersState::CONTROL),
+		shift: keymods.intersects(ModifiersState::SHIFT),
 
 		#[cfg(not(target_os = "macos"))]
 		mac_cmd: false,
 		#[cfg(not(target_os = "macos"))]
-		command: keymods.intersects(KeyMods::CTRL),
+		command: keymods.intersects(ModifiersState::CONTROL),
 
 		#[cfg(target_os = "macos")]
-		mac_cmd: keymods.intersects(KeyMods::LOGO),
+		mac_cmd: keymods.intersects(ModifiersState::LOGO),
 		#[cfg(target_os = "macos")]
-		command: keymods.intersects(KeyMods::LOGO),
+		command: keymods.intersects(ModifiersState::LOGO),
 	}
 }
 
