@@ -40,19 +40,19 @@ impl Input {
 	/// use the function [text_input_event](Input:: text_input_event)
 	pub fn update(&mut self, ctx: &ggez::Context) {
 		/*======================= Keyboard =======================*/
-		// for key in ctx.keyboard.pressed_keys() {
-		// 	if ctx.keyboard.is_key_just_pressed(*key) {
-		// 		if let Some(key) = translate_keycode(*key) {
-		// 			self.raw.events.push(egui::Event::Key {
-		// 				key,
-		// 				pressed: true,
-		// 				repeat: false,
-		// 				modifiers: translate_modifier(ctx.keyboard.active_mods()),
-		// 			})
-		// 		}
-		// 	}
-		// }
-
+		for key in ctx.keyboard.pressed_keys() {
+			if ctx.keyboard.is_key_just_pressed(*key) {
+				if let Some(key) = translate_keycode(*key) {
+					self.raw.events.push(egui::Event::Key {
+						key,
+						physical_key: None,
+						pressed: true,
+						repeat: false,
+						modifiers: translate_modifier(ctx.keyboard.active_mods()),
+					})
+				}
+			}
+		}
 		/*======================= Mouse =======================*/
 		let ggez::mint::Point2 { x, y } = ctx.mouse.position();
 		self.pointer_pos = pos2(x / self.scale_factor, y / self.scale_factor);
@@ -92,7 +92,6 @@ impl Input {
 	/// Set the scale_factor and update the screen_rect
 	pub fn set_scale_factor(&mut self, scale_factor: f32, (w, h): (f32, f32)) {
 		self.scale_factor = scale_factor;
-		self.raw.pixels_per_point = Some(scale_factor);
 		self.resize_event(w, h);
 	}
 
@@ -210,9 +209,9 @@ fn translate_modifier(keymods: ModifiersState) -> egui::Modifiers {
 
 #[inline]
 fn is_printable(chr: char) -> bool {
-	let is_in_private_use_area = '\u{e000}' <= chr && chr <= '\u{f8ff}'
-		|| '\u{f0000}' <= chr && chr <= '\u{ffffd}'
-		|| '\u{100000}' <= chr && chr <= '\u{10fffd}';
+	let is_in_private_use_area = ('\u{e000}'..='\u{f8ff}').contains(&chr)
+		|| ('\u{f0000}'..='\u{ffffd}').contains(&chr)
+		|| ('\u{100000}'..='\u{10fffd}').contains(&chr);
 
 	!is_in_private_use_area && !chr.is_ascii_control()
 }

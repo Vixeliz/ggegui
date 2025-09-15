@@ -6,11 +6,41 @@ on:
   pull_request:
     branches: [ "master" ]
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
   format:
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v3
-    - uses: mbrobbel/rustfmt-check@master
-      with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Check format
+        run: ci/fmt.sh
+
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+    
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Installing build dependencies
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: sudo apt-get install -y libasound2-dev libudev-dev
+
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Check
+        run: ci/check.sh
+        shell: bash

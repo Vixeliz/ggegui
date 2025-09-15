@@ -33,11 +33,12 @@ impl Drop for GuiContext {
 		let egui::FullOutput {
 			textures_delta,
 			shapes,
+			pixels_per_point,
 			..
 		} = self.context.end_frame();
 
 		let mut painter = self.painter.lock().unwrap();
-		painter.shapes = self.context.tessellate(shapes);
+		painter.shapes = self.context.tessellate(shapes, pixels_per_point);
 		painter.textures_delta.push_front(textures_delta);
 	}
 }
